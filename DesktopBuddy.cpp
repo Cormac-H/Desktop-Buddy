@@ -34,7 +34,7 @@ inline bool fileExists(const string& name) //helper function to check if file ex
 void displayIntro() //Function to display aesthetic Header
 {
     int slashValue = 92;
-    //cout << endl << endl;
+    cout << endl;
     cout<< " _____            _    _                ____            _     _       " << endl
         << "|  __ "<< char(slashValue) <<"          | |  | |              |  _ "<< char(slashValue) <<"          | |   | |      " << endl
         << "| |  | | ___  ___| | _| |_ ___  _ __   | |_) |_   _  __| | __| |_   _ " << endl
@@ -58,7 +58,6 @@ pair<int, int> getMaxString(vector<tuple<string, Date, string>> input) //return 
         }
         
     }
-    cout << maxes.first << endl;
 
     for(tuple<string, Date, string> task : input) //store length of the longest task type
     {
@@ -67,7 +66,7 @@ pair<int, int> getMaxString(vector<tuple<string, Date, string>> input) //return 
             maxes.second = get<2>(task).length();
         }   
     }
-    cout << maxes.second << endl;
+
     return maxes;
 }
 
@@ -82,30 +81,50 @@ void printChar(int x, const char* c) //helper method to print a character x numb
 void displayTasks(Tasklist &currentTasklist)
 {
     auto maxes = getMaxString(currentTasklist.getTasks()); //pair of ints showing 
-    int totalWidth = maxes.first+4 + 11 + maxes.second+4;
+    int totalWidth = maxes.first+4 + 13 + maxes.second+4;
     cout << " ";
     printChar(totalWidth, "_"); //print length of all 3 columns
 
     
-    cout << endl << "|"; 
+    cout << endl << "|"; //print task column
     printChar((maxes.first-2)/2, " "); 
     cout << "Task"; printChar((maxes.first-2)/2, " "); 
+    if((maxes.first-2)%2 !=0){cout << " ";}
     cout << "|";
     
-    cout << "   Date   |";
+    cout << "    Date    |"; //print date column
 
-    printChar((maxes.second-2)/2, " ");
+    printChar((maxes.second-2)/2, " "); //print type column
     cout << "Type"; printChar((maxes.second-2)/2, " ");
+    if((maxes.second-2)%2 !=0){cout << " ";}
+    cout << "|" << endl << "|";
+
+    printChar(maxes.first+3, "-"); //print dashed border to seperate tasks
+    cout << "|";
+    
+    printChar(11, "-");
+    cout << "|";
+
+    printChar(maxes.second+3, "-");
     cout << "|" << endl;
 
-    printChar(totalWidth, "_");
-    cout << endl;
-
-
-    for(tuple<string, Date, string> task : currentTasklist.getTasks())
+    for(tuple<string, Date, string> task : currentTasklist.getTasks()) //print each task
     {
-        cout << "| " << get<0>(task) << " |" << endl;      
+        cout << "| " << get<0>(task);
+        printChar((maxes.first+2) - get<0>(task).length(), " ");
+        cout << "|";
+
+        cout << "  " << get<1>(task).toString() << " ";
+        if(get<1>(task).toString().length() == 8){cout << " ";}
+        cout << "|";
+
+        cout << " " << get<2>(task);
+        printChar((maxes.second+2) - get<2>(task).length(), " ");
+        cout << "|" << endl;
     }
+
+    printChar(totalWidth + 2, "-"); //print final border
+    cout << endl;
 }
 
 Tasklist readFromCSV() //Function to populate a tasklist based on CSV contents
