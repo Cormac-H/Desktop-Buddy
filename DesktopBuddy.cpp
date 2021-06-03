@@ -9,6 +9,8 @@
 #include <sys/stat.h>
 #include <fstream>
 #include <string>
+#include <tuple>
+#include <algorithm>
 #include <sstream>
 #include <iostream>
 #include <stdlib.h>
@@ -44,6 +46,68 @@ void displayIntro() //Function to display aesthetic Header
     
 }
 
+pair<int, int> getMaxString(vector<tuple<string, Date, string>> input) //return the lengths of the longest strings in a string, Date, string tuple
+{
+    auto maxes = make_pair<int, int>(6,6); //minimum column width of 5, can be changed to 0 for multipurpose getMax function
+
+    for(tuple<string, Date, string> task : input) //store length of the longest task name
+    {
+        if(get<0>(task).length() > get<0>(maxes))
+        {
+            maxes.first = get<0>(task).length();
+        }
+        
+    }
+    cout << maxes.first << endl;
+
+    for(tuple<string, Date, string> task : input) //store length of the longest task type
+    {
+        if(get<2>(task).length() > get<1>(maxes))
+        {
+            maxes.second = get<2>(task).length();
+        }   
+    }
+    cout << maxes.second << endl;
+    return maxes;
+}
+
+void printChar(int x, const char* c) //helper method to print a character x number of times in console
+{
+    for(int i=0; i < x+1; i++)
+    {
+        cout << c;
+    }
+} 
+
+void displayTasks(Tasklist &currentTasklist)
+{
+    auto maxes = getMaxString(currentTasklist.getTasks()); //pair of ints showing 
+    int totalWidth = maxes.first+4 + 11 + maxes.second+4;
+    cout << " ";
+    printChar(totalWidth, "_"); //print length of all 3 columns
+
+    
+    cout << endl << "|"; 
+    printChar((maxes.first-2)/2, " "); 
+    cout << "Task"; printChar((maxes.first-2)/2, " "); 
+    cout << "|";
+    
+    cout << "   Date   |";
+
+    printChar((maxes.second-2)/2, " ");
+    cout << "Type"; printChar((maxes.second-2)/2, " ");
+    cout << "|" << endl;
+
+    printChar(totalWidth, "_");
+    cout << endl;
+
+
+    for(tuple<string, Date, string> task : currentTasklist.getTasks())
+    {
+        cout << "| " << get<0>(task) << " |" << endl;      
+    }
+}
+
 Tasklist readFromCSV() //Function to populate a tasklist based on CSV contents
 {
     ifstream tasklistFile;
@@ -63,6 +127,7 @@ Tasklist readFromCSV() //Function to populate a tasklist based on CSV contents
         //CSV format = name, day, month, year, task type
         Date date = Date(stoi(row[1]), stoi(row[2]), stoi(row[3]));
         tasklist.addTask(row[0], date, row[4]);
+
         row.clear();
     }
     tasklistFile.close();
@@ -73,7 +138,8 @@ void tasklistMain() //Main driver code for tasklist functionality
 {
     char input;
     Tasklist tasklist = readFromCSV(); //populate tasklist from current CSV
-    displayIntro();
+    displayIntro(); //Displays aesthetic header
+    displayTasks(tasklist);
     while(input != 'e' || input != 'E') //e to exit
     {   
         cin >> input;

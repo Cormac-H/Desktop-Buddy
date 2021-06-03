@@ -33,12 +33,13 @@ class Tasklist //Class for a tasklist
 {
 private:
     std::vector<tuple<std::string, Date, std::string>> tasks; //Each task has a name, due date, and type
-
+    
 public:
     // constructor
     Tasklist(){}
 
     std::vector<tuple<std::string, Date, std::string>> getTasks(){return tasks;}
+
 
     std::string getTaskName(int i) //return name of i'th task
     { 
@@ -60,14 +61,13 @@ public:
         tasks.push_back(make_tuple(name, date, type));
     } 
 
-    void removeTask(int i){};
+    //TODO
+    void removeTask(int i){}
 
-    void deleteAllTasks(){};
-
+    //TODO
+    void deleteAllTasks(){}
 
 };
-
-
 
 #endif
 
