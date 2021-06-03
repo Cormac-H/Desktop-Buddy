@@ -29,11 +29,11 @@ inline bool fileExists(const string& name) //helper function to check if file ex
   return (stat (name.c_str(), &buffer) == 0); 
 }
 
-void displayDefault()
+void displayIntro() //Function to display aesthetic Header
 {
     int slashValue = 92;
-    cout << endl << endl;
-    cout << " _____            _    _                ____            _     _       " << endl
+    //cout << endl << endl;
+    cout<< " _____            _    _                ____            _     _       " << endl
         << "|  __ "<< char(slashValue) <<"          | |  | |              |  _ "<< char(slashValue) <<"          | |   | |      " << endl
         << "| |  | | ___  ___| | _| |_ ___  _ __   | |_) |_   _  __| | __| |_   _ " << endl
         << "| |  | |/ _ "<< char(slashValue) <<"/ __| |/ / __/ _ "<< char(slashValue) <<"| '_ "<< char(slashValue) <<"  |  _ <| | | |/ _` |/ _` | | | |" << endl
@@ -41,41 +41,41 @@ void displayDefault()
         << "|_____/ "<< char(slashValue) <<"___||___/_|"<< char(slashValue) <<"_"<< char(slashValue) <<""<< char(slashValue) <<"__"<< char(slashValue) <<"___/| .__/  |____/ "<< char(slashValue) <<"__,_|"<< char(slashValue) <<"__,_|"<< char(slashValue) <<"__,_|"<< char(slashValue) <<"__, |" << endl
         << "                               | |                               __/ |" << endl
         << "                               |_|                              |___/ " << endl;
+    
 }
 
-Tasklist readFromCSV()
+Tasklist readFromCSV() //Function to populate a tasklist based on CSV contents
 {
-    fstream tasklistFile;
+    ifstream tasklistFile;
     tasklistFile.open("tasks.csv", ios::in);
-    Tasklist *tasklist = new Tasklist();
+    Tasklist tasklist = Tasklist();
 
     vector<string> row;
-    string temp, line, word;
-    while(tasklistFile >> temp)
+    string line, field;
+    
+    while (getline(tasklistFile, line))
     {
-        getline(tasklistFile, line);
-        stringstream s(line);
-
-        while(getline(s, word, char(',')))
+        stringstream ss(line);
+        while(getline(ss, field, ','))
         {
-            row.push_back(word);
+            row.push_back(field);
         }
-        for(string t : row){
-            cout << t << endl;
-        }
-        cout << endl << endl;
+        //CSV format = name, day, month, year, task type
+        Date date = Date(stoi(row[1]), stoi(row[2]), stoi(row[3]));
+        tasklist.addTask(row[0], date, row[4]);
+        row.clear();
     }
+    tasklistFile.close();
+    return tasklist;   
 }
 
 void tasklistMain() //Main driver code for tasklist functionality
 {
     char input;
-    Tasklist tasklist = readFromCSV();
-    readFromCSV();
-    displayDefault();
-    while(input != 'e' || input != 'E')
-    {
-        
+    Tasklist tasklist = readFromCSV(); //populate tasklist from current CSV
+    displayIntro();
+    while(input != 'e' || input != 'E') //e to exit
+    {   
         cin >> input;
     }
 }
@@ -95,7 +95,7 @@ int main()
     }
     else
     {
-        cout << "Welcome back Buddy!";
+        cout << "Welcome back Buddy!" << endl;
     }
 
     tasklistMain();
