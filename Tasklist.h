@@ -43,17 +43,17 @@ public:
 
     std::string getTaskName(int i) //return name of i'th task
     { 
-        return std::get<0>(tasks[i-1]); 
+        return std::get<0>(tasks[i]); 
     }
 
     Date getTaskDate(int i) //return date of i'th task
     {
-        return std::get<1>(tasks[i-1]); 
+        return std::get<1>(tasks[i]); 
     }
 
     std::string getTaskType(int i) //return type of i'th task
     { 
-        return std::get<2>(tasks[i-1]); 
+        return std::get<2>(tasks[i]); 
     }
 
     void addTask(std::string name, Date date, std::string type) //add task to tasklist
@@ -61,8 +61,10 @@ public:
         tasks.push_back(make_tuple(name, date, type));
     } 
 
-    //TODO
-    void removeTask(int i){}
+    void removeTask(int i)
+    {
+        tasks.erase(tasks.begin() + i);
+    }
 
     //TODO
     void deleteAllTasks(){}

@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <sstream>
 #include <iostream>
+#include <cctype>
+#include <locale>
 #include <stdlib.h>
 #include "Tasklist.h"
 using namespace std;
@@ -76,6 +78,11 @@ void printChar(int x, const char *c) //helper method to print a character x numb
     }
 }
 
+void displaySimpleOptions() //Simple helper function to remind the user options are available
+{
+    cout << "Enter O to view Options: ";
+}
+
 void displayTasks(Tasklist &currentTasklist)
 {
     auto maxes = getMaxString(currentTasklist.getTasks()); //pair of ints showing
@@ -118,23 +125,31 @@ void displayTasks(Tasklist &currentTasklist)
     for (tuple<string, Date, string> task : currentTasklist.getTasks()) //print each task
     {
         cout << "| " << get<0>(task);
-        printChar((maxes.first + 2) - get<0>(task).length(), " ");
+        printChar((maxes.first + 2) - get<0>(task).length(), " "); //format task name
         cout << "|";
 
-        cout << "  " << get<1>(task).toString() << " ";
-        if (get<1>(task).toString().length() == 8)
+        if (get<1>(task).toString().length() == 10) //format task date
         {
-            cout << " ";
+            cout << " " <<  get<1>(task).toString() << " ";
+        }
+        else if(get<1>(task).toString().length() == 8)
+        {
+            cout << "  " << get<1>(task).toString() << "  ";
+        }
+        else
+        {
+            cout << "  " << get<1>(task).toString() << " ";
         }
         cout << "|";
 
-        cout << " " << get<2>(task);
+        cout << " " << get<2>(task); //format task type
         printChar((maxes.second + 2) - get<2>(task).length(), " ");
         cout << "|" << endl;
     }
 
     printChar(totalWidth + 2, "-"); //print final border
     cout << endl;
+    displaySimpleOptions();
 }
 
 Tasklist readFromCSV() //Function to populate a tasklist based on CSV contents
@@ -163,10 +178,7 @@ Tasklist readFromCSV() //Function to populate a tasklist based on CSV contents
     return tasklist;
 }
 
-void displaySimpleOptions() //Simple helper function to remind the user options are available
-{
-    cout << "Enter O to view Options: ";
-}
+
 
 void displayAllOptions() //Function to display all available options
 {
@@ -208,7 +220,19 @@ bool isValidDate(int day, int month) //helper function to check if a day/month c
 
 void writeToCSV(Tasklist tasklist) //Write a tasklist object to a CSV file
 {
-    //TODO
+    ofstream tasklistFile;
+    tasklistFile.open("tasks.csv", std::ofstream::out | std::ofstream::trunc); //trunc to delete everything inside the file
+    
+    for(tuple<string, Date, string> task : tasklist.getTasks()) //write entire tasklist to CSV file
+    {
+        tasklistFile << get<0>(task) << ","; //task name
+        tasklistFile << get<1>(task).getDay() << ","; //day, month, year
+        tasklistFile << get<1>(task).getMonth() << ",";
+        tasklistFile << get<1>(task).getYear() << ",";
+        tasklistFile << get<2>(task); //task type
+        tasklistFile << endl;
+    }
+    tasklistFile.close();
 }
 
 Tasklist addTask() //Function to add a task to the current tasklist and update the CSV/displayed info
@@ -218,7 +242,8 @@ Tasklist addTask() //Function to add a task to the current tasklist and update t
     bool validDate = false;
 
     cout << "Task Name: ";
-    cin >> taskName; //Obtain a task name
+    cin.ignore(1,'\n');
+    getline(cin, taskName); //Obtain a task name
 
     while (!validDate) //validate the date
     {
@@ -276,7 +301,8 @@ Tasklist addTask() //Function to add a task to the current tasklist and update t
     temp = "";
 
     cout << "Task Type: ";
-    cin >> taskType; //Obtain a task name
+    cin.ignore(1,'\n');
+    getline(cin, taskType); //Obtain a task name
 
     cout << "Your task has been added buddy!" << endl;
     Date date = Date(day, month, year);
@@ -289,24 +315,154 @@ Tasklist addTask() //Function to add a task to the current tasklist and update t
     return tasklist;
 }
 
+static inline void ltrim(std::string &s) //trim start of string
+{
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }));
+}
+
+
+static inline void rtrim(std::string &s) { //trim end of string
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+}
+
+static inline void trim(std::string &s) { //trim both ends of a string
+    ltrim(s);
+    rtrim(s);
+}
+
+int caseInsensitiveMatch(string s1, string s2) { //helper function to perform a case-insensitive match
+   //convert s1 and s2 into lower case strings
+   transform(s1.begin(), s1.end(), s1.begin(), ::tolower);
+   transform(s2.begin(), s2.end(), s2.begin(), ::tolower);
+   trim(s1);
+   trim(s2);
+   if(s1.compare(s2) == 0)
+      return 1; //The strings are same
+   return 0; //not matched
+}
+
+Tasklist deleteTask(Tasklist &tasklist)
+{
+    string taskName;
+    bool removed = false;
+    cout << "What's the name of the task you'd like to delete: ";
+    cin.ignore(1,'\n');
+    getline(cin, taskName);
+
+    for(int i = 0; i < tasklist.getTasks().size(); i++)
+    {
+        if(caseInsensitiveMatch(tasklist.getTaskName(i), taskName))
+        {
+            tasklist.removeTask(i); //if the i'th element matches the given task name, erase it
+            removed = true;
+        }
+    }
+    
+    if(!removed)
+    {
+        cout << "Sorry we couldn't find your task!" << endl << endl;
+    }
+    else
+    {
+        cout << "Your task has been removed buddy!" << endl << endl;
+    }
+
+    writeToCSV(tasklist);
+    displayTasks(tasklist);
+    return tasklist;
+}
+
+void congratulate() //helper function to print aesthetic congratulations method
+{
+    cout << "                                 _         _       _   _                 " << endl;
+    cout << "                                | |       | |     | | (_)                " << endl;
+    cout << "  ___ ___  _ __   __ _ _ __ __ _| |_ _   _| | __ _| |_ _  ___  _ __  ___ "<< endl;
+    cout << " / __/ _ \\| '_ \\ / _` | '__/ _` | __| | | | |/ _` | __| |/ _ \\| '_ \\/ __|"<< endl;
+    cout << "| (_| (_) | | | | (_| | | | (_| | |_| |_| | | (_| | |_| | (_) | | | \\__ \\"<< endl;
+    cout << " \\___\\___/|_| |_|\\__, |_|  \\__,_|\\__|\\__,_|_|\\__,_|\\__|_|\\___/|_| |_|___/"<< endl;
+    cout << "                  __/ |                                                  " << endl;
+    cout << "                 |___/                                                   " << endl;
+
+    cout << endl << "Great work buddy! Keep it up!!" << endl << endl;
+}
+
+Tasklist completeTask(Tasklist &tasklist)
+{
+    string taskName;
+    bool removed = false;
+    cout << "What's the name of the task you completed: ";
+    cin.ignore(1,'\n');
+    getline(cin, taskName);
+
+    for(int i = 0; i < tasklist.getTasks().size(); i++)
+    {
+        if(caseInsensitiveMatch(tasklist.getTaskName(i), taskName))
+        {
+            tasklist.removeTask(i); //if the i'th element matches the given task name, erase it
+            removed = true;
+        }
+    }
+    
+    if(!removed)
+    {
+        cout << "Sorry we couldn't find your task!" << endl << endl;
+    }
+    else
+    {
+        congratulate();
+    }
+
+    writeToCSV(tasklist);
+    displayTasks(tasklist);
+    return tasklist;
+}
+
 void tasklistMain() //Main driver code for tasklist functionality
 {
     char input;
-    Tasklist tasklist = readFromCSV(); //populate tasklist from current CSV
-    displayIntro();                    //Displays aesthetic header
-    displayTasks(tasklist);            //Prints the tasklist object as a visual list
-    displaySimpleOptions();            //Display prompt for user input
-
+    displayIntro();  //Displays aesthetic header 
+    Tasklist tasklist;
+    ifstream tasklistFile;
+    tasklistFile.open("tasks.csv", ios::in);
+    string temp;
+    getline(tasklistFile, temp);
+    if(temp != "")
+    {
+        tasklist = readFromCSV(); //populate tasklist from current CSV
+        displayTasks(tasklist); //Prints the tasklist object as a visual list
+    }
+    else
+    {
+        displaySimpleOptions();
+    }
+    
     while (input != 'e' && input != 'E') //Awaits user input e.g. adding or deleting tasks. E to exit
     {
         cin >> input;
         if (input == 'o' || input == 'O')
         {
             displayAllOptions();
+            displaySimpleOptions();
         }
         else if (input == 'n' || input == 'N')
         {
             tasklist = addTask();
+        }
+        else if (input == 'd' || input == 'D')
+        {
+            tasklist = deleteTask(tasklist);
+        }
+        else if (input == 'c' || input == 'C')
+        {
+            completeTask(tasklist);
+        }
+        else if (input == 'v' || input == 'V')
+        {
+            displayTasks(tasklist);
         }
     }
     exit(EXIT_SUCCESS);
@@ -317,6 +473,7 @@ int main()
     system("Color 03");
     int slashValue = 92;
     string testfile = get_current_dir() + char(slashValue) + "tasks.csv";
+
     if (!fileExists(testfile)) //create a new csv file to store tasks in current directory
     {
         ofstream tasklistFile;
